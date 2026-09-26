@@ -51,3 +51,9 @@ export function xpForNextLevel(level: number) {
 export function formatNumber(value: number) {
   return new Intl.NumberFormat("es-ES").format(Math.max(0, Math.floor(value)));
 }
+
+export function safeListeningMinutes(minutes: number, alreadyAcceptedToday: number) {
+  const requested = Math.min(60, Math.max(0, Math.floor(minutes)));
+  const remaining = Math.max(0, 360 - Math.max(0, Math.floor(alreadyAcceptedToday)));
+  return Math.min(requested, remaining);
+}

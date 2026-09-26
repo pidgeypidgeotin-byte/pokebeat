@@ -8,6 +8,7 @@ const tabs = [
   { name: "music", title: "Música", icon: "musical-notes-outline" as const, active: "musical-notes" as const },
   { name: "collection", title: "Colección", icon: "sparkles-outline" as const, active: "sparkles" as const },
   { name: "quests", title: "Misiones", icon: "flag-outline" as const, active: "flag" as const },
+  { name: "play", title: "Jugar", icon: "game-controller-outline" as const, active: "game-controller" as const },
 ];
 
 export default function TabLayout() {

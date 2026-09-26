@@ -1,6 +1,6 @@
-# PokéBeat — MVP funcional
+# PokéBeat — MVP ampliado para Android
 
-PokéBeat es un juego móvil de mascotas virtuales original, inspirado en juegos de colección, donde escuchar música impulsa la progresión de Lumi.
+PokéBeat es un juego móvil de mascotas virtuales original, inspirado en juegos de colección, donde escuchar música impulsa la progresión de Pikachu/Lumi.
 
 ## Incluido en esta primera versión
 
@@ -14,6 +14,9 @@ PokéBeat es un juego móvil de mascotas virtuales original, inspirado en juegos
 - Modo de prueba de escucha para validar el bucle central sin descargar ni extraer audio.
 - Persistencia local con AsyncStorage.
 - Pantallas Inicio, Música, Colección y Misiones.
+- Sprite de Pikachu integrado desde PMDCollab y créditos incluidos en el proyecto.
+- Zona **Jugar** con entrenamiento EV normal, minijuegos de reflejos/memoria/carrera, crianza normal y Método Masuda, incubación por minutos, evolución Pikachu → Raichu, combate básico contra NPC y personalización de Poké Ball.
+- Límite anti-abuso básico: máximo 60 minutos aceptados por evento y 360 minutos por día local.
 - OAuth oficial de Spotify preparado en `lib/spotify.ts`.
 
 ## Ejecutar
@@ -43,6 +46,10 @@ pnpm check
 4. Completa el intercambio seguro del código OAuth en el backend antes de usar tokens reales.
 
 La app no descarga canciones ni extrae audio. Solo está preparada para consultar los endpoints oficiales permitidos. Spotify puede limitar la lectura del estado de reproducción según la cuenta, el dispositivo y los permisos vigentes.
+
+## Assets y créditos
+
+El sprite de Pikachu usado en esta base proviene de [PMDCollab Sprite Repository](https://sprites.pmdcollab.org/), archivo `sprite/0025/Idle-Anim.png`. El registro asociado se conserva en `assets/sprites/pikachu-credits.txt`. El repositorio indica uso no comercial con atribución bajo CC BY-NC 4.0; PokéBeat no es un producto oficial de Nintendo ni de The Pokémon Company.
 
 ## Próximas fases
 
