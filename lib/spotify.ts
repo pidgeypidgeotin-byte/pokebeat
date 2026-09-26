@@ -102,7 +102,7 @@ export async function getValidAccessToken() {
 }
 
 export async function startSpotifyOAuth(): Promise<{ ok: boolean; message: string; playback?: SpotifyPlayback }> {
-  if (!isSpotifyConfigured()) return { ok: false, message: "REQUIERE CONFIGURACIÓN EXTERNA: define EXPO_PUBLIC_SPOTIFY_CLIENT_ID y registra exactamente pokebeat://oauth/callback en Spotify for Developers." };
+  if (!isSpotifyConfigured()) return { ok: false, message: `REQUIERE CONFIGURACIÓN EXTERNA: define EXPO_PUBLIC_SPOTIFY_CLIENT_ID y registra exactamente esta Redirect URI: ${getSpotifyRedirectUri()}` };
   const { verifier, challenge } = await createPkcePair();
   const state = await randomString(32);
   await setProtectedItem(VERIFIER_KEY, verifier);
