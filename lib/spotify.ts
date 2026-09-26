@@ -1,7 +1,8 @@
 import * as Crypto from "expo-crypto";
 import * as Linking from "expo-linking";
-import * as SecureStore from "expo-secure-store";
 import * as WebBrowser from "expo-web-browser";
+
+import { deleteProtectedItem, getProtectedItem, setProtectedItem } from "@/lib/secure-storage";
 
 const CLIENT_ID = process.env.EXPO_PUBLIC_SPOTIFY_CLIENT_ID ?? "";
 const TOKEN_KEY = "pokebeat.spotify.tokens.v1";
@@ -55,11 +56,11 @@ export function isSpotifyConfigured() {
 }
 
 async function saveTokens(tokens: SpotifyTokens) {
-  await SecureStore.setItemAsync(TOKEN_KEY, JSON.stringify(tokens));
+  await setProtectedItem(TOKEN_KEY, JSON.stringify(tokens));
 }
 
 async function readTokens() {
-  const stored = await SecureStore.getItemAsync(TOKEN_KEY);
+  const stored = await getProtectedItem(TOKEN_KEY);
   if (!stored) return null;
   try { return JSON.parse(stored) as SpotifyTokens; } catch { return null; }
 }
@@ -101,21 +102,21 @@ export async function startSpotifyOAuth(): Promise<{ ok: boolean; message: strin
   if (!isSpotifyConfigured()) return { ok: false, message: "REQUIERE CONFIGURACIÓN EXTERNA: define EXPO_PUBLIC_SPOTIFY_CLIENT_ID y registra exactamente pokebeat://oauth/callback en Spotify for Developers." };
   const { verifier, challenge } = await createPkcePair();
   const state = await randomString(32);
-  await SecureStore.setItemAsync(VERIFIER_KEY, verifier);
-  await SecureStore.setItemAsync(STATE_KEY, state);
+  await setProtectedItem(VERIFIER_KEY, verifier);
+  await setProtectedItem(STATE_KEY, state);
   const params = new URLSearchParams({ client_id: getClientId(), response_type: "code", redirect_uri: getSpotifyRedirectUri(), scope: SCOPES, code_challenge_method: "S256", code_challenge: challenge, state, show_dialog: "true" });
   const result = await WebBrowser.openAuthSessionAsync(`https://accounts.spotify.com/authorize?${params.toString()}`, getSpotifyRedirectUri());
   if (result.type !== "success" || !result.url) return { ok: false, message: "Autorización cancelada o no completada." };
   const callback = new URL(result.url);
   const returnedState = callback.searchParams.get("state");
   const code = callback.searchParams.get("code");
-  const expectedState = await SecureStore.getItemAsync(STATE_KEY);
-  const storedVerifier = await SecureStore.getItemAsync(VERIFIER_KEY);
+  const expectedState = await getProtectedItem(STATE_KEY);
+  const storedVerifier = await getProtectedItem(VERIFIER_KEY);
   if (!code || !storedVerifier || returnedState !== expectedState) return { ok: false, message: "Spotify rechazó el callback por código o state inválido." };
   try {
     await exchangeCode(code, storedVerifier);
-    await SecureStore.deleteItemAsync(VERIFIER_KEY);
-    await SecureStore.deleteItemAsync(STATE_KEY);
+    await deleteProtectedItem(VERIFIER_KEY);
+    await deleteProtectedItem(STATE_KEY);
     return { ok: true, message: "Spotify conectado mediante OAuth PKCE." };
   } catch (error) {
     return { ok: false, message: `LIMITACIÓN DE API: no se pudo intercambiar el código de Spotify (${String(error)}).` };
@@ -128,7 +129,7 @@ export async function fetchCurrentPlayback(): Promise<SpotifyPlayback | null> {
   const response = await fetch(`${API_BASE}/me/player/currently-playing?market=ES&additional_types=track,episode`, { headers: { Authorization: `Bearer ${token}` } });
   if (response.status === 204) return null;
   if (!response.ok) {
-    if (response.status === 401) await SecureStore.deleteItemAsync(TOKEN_KEY);
+    if (response.status === 401) await deleteProtectedItem(TOKEN_KEY);
     throw new Error(`Spotify playback request failed (${response.status})`);
   }
   const payload = await response.json();
@@ -147,7 +148,7 @@ export async function fetchSpotifyProfile(): Promise<{ displayName: string; id: 
 }
 
 export async function disconnectSpotify() {
-  await SecureStore.deleteItemAsync(TOKEN_KEY);
-  await SecureStore.deleteItemAsync(VERIFIER_KEY);
-  await SecureStore.deleteItemAsync(STATE_KEY);
+  await deleteProtectedItem(TOKEN_KEY);
+  await deleteProtectedItem(VERIFIER_KEY);
+  await deleteProtectedItem(STATE_KEY);
 }
