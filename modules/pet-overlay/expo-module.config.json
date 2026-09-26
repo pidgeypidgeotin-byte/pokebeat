@@ -1,0 +1,12 @@
+{
+  "platforms": ["android"],
+  "android": {
+    "modules": ["com.pokebeat.petsoverlay.PetOverlayModule"],
+    "publication": {
+      "groupId": "com.pokebeat",
+      "artifactId": "pet-overlay",
+      "version": "1.0.0",
+      "repository": "local-maven-repo"
+    }
+  }
+}

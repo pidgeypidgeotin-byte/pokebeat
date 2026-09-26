@@ -4,6 +4,7 @@ import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { CreatureOrb } from "@/components/creature-orb";
+import { PetOverlayControl } from "@/components/pet-overlay-control";
 import { formatNumber, xpForNextLevel } from "@/lib/game-config";
 import { useGame } from "@/lib/game-store";
 
@@ -41,6 +42,7 @@ export default function HomeScreen() {
 
       <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>Atajos</Text><Text style={styles.sectionMeta}>sigue creciendo</Text></View>
       <View style={styles.shortcutRow}><Pressable onPress={() => router.push("/(tabs)/collection")} style={({ pressed }) => [styles.shortcut, pressed && styles.pressed]}><Text style={styles.shortcutIcon}>◈</Text><Text style={styles.shortcutTitle}>Ficha</Text><Text style={styles.shortcutSub}>IVs y EVs</Text></Pressable><Pressable onPress={() => router.push("/(tabs)/quests")} style={({ pressed }) => [styles.shortcut, pressed && styles.pressed]}><Text style={styles.shortcutIcon}>⚑</Text><Text style={styles.shortcutTitle}>Misiones</Text><Text style={styles.shortcutSub}>recompensas</Text></Pressable><Pressable onPress={() => awardListeningMinutes(5)} style={({ pressed }) => [styles.shortcut, pressed && styles.pressed]}><Text style={styles.shortcutIcon}>＋</Text><Text style={styles.shortcutTitle}>Demo +5</Text><Text style={styles.shortcutSub}>minutos música</Text></Pressable></View>
+      <PetOverlayControl />
       {charmActive && <View style={styles.charmBanner}><Text style={styles.charmIcon}>✧</Text><Text style={styles.charmText}>Shiny Charm activo · aumenta tus probabilidades</Text></View>}
     </ScrollView>
   );

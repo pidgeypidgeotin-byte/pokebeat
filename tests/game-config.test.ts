@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { DIALOGUES, GAME_CONFIG, MUSIC_STATS, safeListeningMinutes, xpForNextLevel } from "../lib/game-config";
+import { calculatePokemonStats, DIALOGUES, GAME_CONFIG, MUSIC_STATS, POKEMON_BASE_STATS, safeListeningMinutes, xpForNextLevel } from "../lib/game-config";
 
 describe("PokéBeat - configuración de progresión", () => {
   it("mantiene una curva de XP creciente sin fijar un nivel máximo", () => {
@@ -31,5 +31,13 @@ describe("PokéBeat - configuración de progresión", () => {
     expect(safeListeningMinutes(60, 330)).toBe(30);
     expect(safeListeningMinutes(60, 360)).toBe(0);
     expect(safeListeningMinutes(-10, 0)).toBe(0);
+  });
+
+  it("usa los base stats reales de Pikachu y escala con IV/EV/nivel", () => {
+    expect(POKEMON_BASE_STATS.Pikachu).toEqual({ hp: 35, attack: 55, defense: 40, specialAttack: 50, specialDefense: 50, speed: 90 });
+    const zero = { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 };
+    const stats = calculatePokemonStats("Pikachu", 1, zero, zero, zero);
+    expect(stats.hp).toBe(11);
+    expect(stats.speed).toBe(6);
   });
 });

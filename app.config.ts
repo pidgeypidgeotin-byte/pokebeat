@@ -15,7 +15,7 @@ const config: ExpoConfig = {
     adaptiveIcon: { backgroundColor: "#0d0b1b", foregroundImage: "./assets/images/android-icon-foreground.png", backgroundImage: "./assets/images/android-icon-background.png", monochromeImage: "./assets/images/android-icon-monochrome.png" },
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
-    permissions: ["POST_NOTIFICATIONS"],
+    permissions: ["POST_NOTIFICATIONS", "FOREGROUND_SERVICE", "FOREGROUND_SERVICE_SPECIAL_USE", "SYSTEM_ALERT_WINDOW"],
     intentFilters: [{ action: "VIEW", data: [{ scheme: "pokebeat", host: "*" }], category: ["BROWSABLE", "DEFAULT"] }],
   },
   web: { bundler: "metro", output: "static", favicon: "./assets/images/favicon.png" },

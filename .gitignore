@@ -38,9 +38,9 @@ yarn-error.*
 
 app-example
 
-# generated native folders
+# iOS can remain generated for now; Android is checked in because PokéBeat
+# includes a foreground service and overlay module that must ship with the app.
 /ios
-/android
 
 # IDE
 .vscode/

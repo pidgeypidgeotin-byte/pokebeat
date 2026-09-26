@@ -29,6 +29,25 @@ export const MUSIC_STATS = [
 
 export type StatKey = (typeof MUSIC_STATS)[number]["key"];
 
+export type BaseStats = Record<StatKey, number>;
+
+// Base stats de las líneas usadas por PokéBeat (formato moderno de Pokémon).
+export const POKEMON_BASE_STATS: Record<string, BaseStats> = {
+  Pichu: { hp: 20, attack: 40, defense: 15, specialAttack: 35, specialDefense: 35, speed: 60 },
+  Pikachu: { hp: 35, attack: 55, defense: 40, specialAttack: 50, specialDefense: 50, speed: 90 },
+  Raichu: { hp: 60, attack: 90, defense: 55, specialAttack: 90, specialDefense: 80, speed: 110 },
+};
+
+export function calculatePokemonStats(species: string, level: number, ivs: Record<StatKey, number>, normalEvs: Record<StatKey, number>, musicalEvs: Record<StatKey, number>): BaseStats {
+  const base = POKEMON_BASE_STATS[species] ?? POKEMON_BASE_STATS.Pikachu;
+  const safeLevel = Math.max(1, Math.floor(level));
+  return Object.fromEntries(MUSIC_STATS.map(({ key }) => {
+    const ev = Math.max(0, normalEvs[key] ?? 0) + Math.max(0, musicalEvs[key] ?? 0);
+    const core = Math.floor(((2 * base[key] + Math.max(0, ivs[key] ?? 0) + Math.floor(ev / 4)) * safeLevel) / 100);
+    return [key, key === "hp" ? core + safeLevel + 10 : core + 5];
+  })) as BaseStats;
+}
+
 export const DIALOGUES = [
   "¡Hola! ¿Qué escuchamos hoy?",
   "Esta canción me pone de buen humor.",
