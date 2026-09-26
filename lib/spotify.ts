@@ -1,6 +1,6 @@
 import * as Crypto from "expo-crypto";
-import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
+import { Platform } from "react-native";
 
 import { deleteProtectedItem, getProtectedItem, setProtectedItem } from "@/lib/secure-storage";
 
@@ -48,7 +48,10 @@ function getClientId() {
 }
 
 export function getSpotifyRedirectUri() {
-  return Linking.createURL("oauth/callback");
+  if (Platform.OS === "web" && typeof window !== "undefined") {
+    return `${window.location.origin}/oauth/callback`;
+  }
+  return "pokebeat://oauth/callback";
 }
 
 export function isSpotifyConfigured() {
