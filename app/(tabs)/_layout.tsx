@@ -1,40 +1,23 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { Tabs } from "expo-router";
+import { Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { HapticTab } from "@/components/haptic-tab";
-import { IconSymbol } from "@/components/ui/icon-symbol";
-import { Platform } from "react-native";
-import { useColors } from "@/hooks/use-colors";
+const tabs = [
+  { name: "index", title: "Inicio", icon: "home-outline" as const, active: "home" as const },
+  { name: "music", title: "Música", icon: "musical-notes-outline" as const, active: "musical-notes" as const },
+  { name: "collection", title: "Colección", icon: "sparkles-outline" as const, active: "sparkles" as const },
+  { name: "quests", title: "Misiones", icon: "flag-outline" as const, active: "flag" as const },
+];
 
 export default function TabLayout() {
-  const colors = useColors();
   const insets = useSafeAreaInsets();
-  const bottomPadding = Platform.OS === "web" ? 12 : Math.max(insets.bottom, 8);
-  const tabBarHeight = 56 + bottomPadding;
-
+  const bottom = Platform.OS === "web" ? 10 : Math.max(insets.bottom, 8);
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: colors.tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarStyle: {
-          paddingTop: 8,
-          paddingBottom: bottomPadding,
-          height: tabBarHeight,
-          backgroundColor: colors.background,
-          borderTopColor: colors.border,
-          borderTopWidth: 0.5,
-        },
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Home",
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-        }}
-      />
+    <Tabs screenOptions={{ headerShown: false, tabBarActiveTintColor: "#d6ceff", tabBarInactiveTintColor: "#77728f", tabBarStyle: { backgroundColor: "#15122a", borderTopColor: "#2e294d", height: 58 + bottom, paddingBottom: bottom, paddingTop: 7 }, tabBarLabelStyle: { fontSize: 10, fontWeight: "700" } }}>
+      {tabs.map((tab) => (
+        <Tabs.Screen key={tab.name} name={tab.name} options={{ title: tab.title, tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? tab.active : tab.icon} size={size} color={color} /> }} />
+      ))}
     </Tabs>
   );
 }
