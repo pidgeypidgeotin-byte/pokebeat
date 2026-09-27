@@ -2,11 +2,12 @@ import React, { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { Mood } from "@/lib/game-store";
+import { getPokedexEntry } from "@/lib/pokedex";
 
-export function CreatureOrb({ mood, shiny, onPress }: { mood: Mood; shiny: boolean; onPress: () => void }) {
+export function CreatureOrb({ species, mood, shiny, onPress }: { species: string; mood: Mood; shiny: boolean; onPress: () => void }) {
   const float = useRef(new Animated.Value(0)).current;
   const pulse = useRef(new Animated.Value(1)).current;
-  const [frame, setFrame] = useState(0);
+  const sprite = getPokedexEntry(species).sprite;
 
   useEffect(() => {
     const animation = Animated.loop(Animated.parallel([
@@ -20,8 +21,7 @@ export function CreatureOrb({ mood, shiny, onPress }: { mood: Mood; shiny: boole
       ]),
     ]));
     animation.start();
-    const spriteTimer = setInterval(() => setFrame((current) => (current + 1) % 6), 180);
-    return () => { animation.stop(); clearInterval(spriteTimer); };
+    return () => { animation.stop(); };
   }, [float, pulse]);
 
   return (
@@ -30,7 +30,7 @@ export function CreatureOrb({ mood, shiny, onPress }: { mood: Mood; shiny: boole
         <View style={styles.aura} />
         <View style={[styles.body, shiny && styles.shinyBody]}>
           <View style={styles.spriteFrame}>
-            <Image source={require("@/assets/sprites/pikachu-idle.png")} style={[styles.spriteSheet, { left: -118 * frame }]} resizeMode="stretch" />
+            <Image source={{ uri: sprite }} style={styles.spriteImage} resizeMode="contain" />
           </View>
           <View style={styles.moodBadge}><Text style={styles.moodFace}>{mood === "Cansado" ? "﹀" : mood === "Emocionado" ? "!" : "♪"}</Text></View>
         </View>
@@ -48,8 +48,8 @@ const styles = StyleSheet.create({
   aura: { position: "absolute", width: 190, height: 190, borderRadius: 95, backgroundColor: "rgba(129, 110, 255, 0.18)", borderWidth: 1, borderColor: "rgba(255,255,255,0.18)" },
   body: { width: 132, height: 132, borderRadius: 68, backgroundColor: "#8b7cff", borderWidth: 5, borderColor: "#bfb7ff", shadowColor: "#8b7cff", shadowOpacity: 0.5, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 9 },
   shinyBody: { backgroundColor: "#53c8bf", borderColor: "#e7ffb3", shadowColor: "#e7ffb3" },
-  spriteFrame: { width: 118, height: 118, overflow: "hidden", alignItems: "flex-start", justifyContent: "flex-start", position: "relative" },
-  spriteSheet: { position: "absolute", width: 708, height: 1316, top: 0 },
+  spriteFrame: { width: 118, height: 118, overflow: "hidden", alignItems: "center", justifyContent: "center", position: "relative" },
+  spriteImage: { width: 112, height: 112 },
   moodBadge: { position: "absolute", right: -3, top: 19, width: 32, height: 32, borderRadius: 16, backgroundColor: "#fff0a4", alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: "#17142b" },
   moodFace: { color: "#17142b", fontSize: 18, fontWeight: "900" },
   shinyBadge: { position: "absolute", right: 27, top: 34, color: "#f7ffad", fontSize: 26 },

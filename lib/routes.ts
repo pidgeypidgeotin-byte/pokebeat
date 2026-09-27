@@ -1,4 +1,4 @@
-import { FIRST_151, type PokedexEntry } from "@/lib/pokedex";
+import { FIRST_151, type PokedexEntry } from "./pokedex";
 
 export type Route = { id: number; name: string; theme: string; minLevel: number; maxLevel: number; species: PokedexEntry[] };
 

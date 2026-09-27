@@ -30,7 +30,7 @@ export default function HomeScreen() {
 
       <View style={styles.heroCard}>
         <View style={styles.heroTop}><View><Text style={styles.species}>{state.creature.species}</Text><Text style={styles.level}>Nivel {formatNumber(state.creature.level)}</Text></View><View style={styles.moodPill}><Text style={styles.moodDot}>●</Text><Text style={styles.moodText}>{state.creature.mood}</Text></View></View>
-        <CreatureOrb mood={state.creature.mood} shiny={state.creature.shiny} onPress={tapCreature} />
+        <CreatureOrb species={state.creature.species} mood={state.creature.mood} shiny={state.creature.shiny} onPress={tapCreature} />
         <View style={styles.dialogue}><Text style={styles.dialogueMark}>“</Text><Text style={styles.dialogueText}>{state.dialogue}</Text></View>
         <View style={styles.xpRow}><Text style={styles.xpLabel}>XP de aventura</Text><Text style={styles.xpNumber}>{formatNumber(state.creature.xp)} / {formatNumber(nextXp)}</Text></View>
         <View style={styles.progressTrack}><View style={[styles.progressFill, { width: `${Math.max(3, xpProgress * 100)}%` }]} /></View>
