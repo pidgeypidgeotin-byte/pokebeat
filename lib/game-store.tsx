@@ -2,6 +2,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { DIALOGUES, GAME_CONFIG, safeListeningMinutes, type StatKey } from "@/lib/game-config";
+import { getPokedexEntry } from "@/lib/pokedex";
+import { routeFor } from "@/lib/routes";
 
 export type Mood = "Feliz" | "Triste" | "Enojado" | "Emocionado" | "Cansado" | "Dormido" | "Aburrido" | "Curioso" | "Hambriento" | "Alegre" | "Nervioso" | "Relajado";
 type Stats = Record<StatKey, number>;
@@ -35,7 +37,7 @@ export type GameState = {
   creature: {
     name: string;
     species: string;
-    evolutionStage: "Pichu" | "Pikachu" | "Raichu";
+    evolutionStage: string;
     level: number;
     xp: number;
     mood: Mood;
@@ -72,6 +74,9 @@ export type GameState = {
   dialogue: string;
   notifications: string[];
   lastSavedAt: number;
+  starterChosen: boolean;
+  collection: number[];
+  route: { current: number; encounter: { id: number; level: number } | null };
 };
 
 const zeroStats = (): Stats => ({ hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 });
@@ -84,7 +89,7 @@ export const initialGameState: GameState = {
     musicalEvs: zeroStats(), normalEvs: { hp: 80, attack: 132, defense: 44, specialAttack: 16, specialDefense: 28, speed: 64 }, ivs: baseIvs(), shinyCharmUntil: null,
   },
   wallet: { pkc: 25420, pkd: 48 },
-  inventory: { "Poké Ball": 12, "Baya energética": 4, "Accesorio aurora": 1, "Shiny Charm": 0, "Huevo musical": 0 },
+  inventory: { "Poké Ball": 12, "Super Ball": 3, "Ultra Ball": 1, "Baya energética": 4, "Accesorio aurora": 1, "Shiny Charm": 0, "Huevo musical": 0 },
   customization: { ball: "Poké Ball clásica", skin: "Aurora", accessory: "Accesorio aurora" },
   music: { connected: false, accountName: null, currentTrack: "Neon Sunrise", currentArtist: "Mara Sol", currentAlbum: "Horizonte", minutesListened: 272, xpEarned: 12450, pkcEarned: 2400, musicalEvsEarned: 7 },
   antiAbuse: { dayKey: dayKey(), acceptedMinutesToday: 0, lastAcceptedAt: null },
@@ -100,9 +105,12 @@ export const initialGameState: GameState = {
   dialogue: "¡Hola! ¿Qué escuchamos hoy?",
   notifications: ["Lumi está listo para escuchar música.", "Artista favorito detectado: Mara Sol."],
   lastSavedAt: Date.now(),
+  starterChosen: false,
+  collection: [],
+  route: { current: 1, encounter: null },
 };
 
-const STORAGE_KEY = "pokebeat-save-v2";
+const STORAGE_KEY = "pokebeat-save-v3";
 type ActionResult = { ok: boolean; message: string };
 
 type GameContextValue = {
@@ -122,12 +130,16 @@ type GameContextValue = {
   evolveCreature: () => ActionResult;
   runBattle: (opponent: string) => ActionResult;
   customize: (kind: "ball" | "skin", value: string) => void;
+  chooseStarter: (species: string) => ActionResult;
+  encounterRoute: (routeId: number) => ActionResult;
+  captureEncounter: () => ActionResult;
+  resetGame: () => void;
 };
 
 const GameContext = createContext<GameContextValue | null>(null);
 function pushNotification(notifications: string[], message: string) { return [message, ...notifications.filter((item) => item !== message)].slice(0, 8); }
 function mergeStoredState(stored: Partial<GameState>): GameState {
-  return { ...initialGameState, ...stored, creature: { ...initialGameState.creature, ...(stored.creature ?? {}) }, music: { ...initialGameState.music, ...(stored.music ?? {}) }, antiAbuse: { ...initialGameState.antiAbuse, ...(stored.antiAbuse ?? {}) }, breeding: { ...initialGameState.breeding, ...(stored.breeding ?? {}) }, customization: { ...initialGameState.customization, ...(stored.customization ?? {}) } };
+  return { ...initialGameState, ...stored, creature: { ...initialGameState.creature, ...(stored.creature ?? {}) }, music: { ...initialGameState.music, ...(stored.music ?? {}) }, antiAbuse: { ...initialGameState.antiAbuse, ...(stored.antiAbuse ?? {}) }, breeding: { ...initialGameState.breeding, ...(stored.breeding ?? {}) }, customization: { ...initialGameState.customization, ...(stored.customization ?? {}) }, route: { ...initialGameState.route, ...(stored.route ?? {}) }, collection: Array.isArray(stored.collection) ? stored.collection : initialGameState.collection, starterChosen: Boolean(stored.starterChosen) };
 }
 
 export function GameProvider({ children }: { children: ReactNode }) {
@@ -156,7 +168,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const evolveCreature = useCallback((): ActionResult => { let result: ActionResult = { ok: false, message: "Aún no cumple el nivel requerido." }; setState((current) => { if (current.creature.level < 25 || current.creature.evolutionStage !== "Pikachu") return current; result = { ok: true, message: "¡Pikachu evolucionó a Raichu!" }; return { ...current, creature: { ...current.creature, evolutionStage: "Raichu", species: "Raichu", mood: "Emocionado" }, dialogue: "¡RAI! ¡Mi nueva forma tiene ritmo propio!", notifications: pushNotification(current.notifications, result.message) }; }); return result; }, []);
   const runBattle = useCallback((opponent: string): ActionResult => { let result: ActionResult = { ok: true, message: "Victoria en combate." }; setState((current) => { const power = current.creature.level + Object.values(current.creature.normalEvs).reduce((sum, value) => sum + value, 0) / 20 + Object.values(current.creature.musicalEvs).reduce((sum, value) => sum + value, 0) / 10; const victory = power >= 35 || Math.random() > 0.25; const reward = victory ? 180 : 30; result = { ok: victory, message: victory ? `¡Victoria contra ${opponent}! +${reward} PKC.` : `${opponent} ganó esta vez. +${reward} PKC por participar.` }; return { ...current, wallet: { ...current.wallet, pkc: current.wallet.pkc + reward }, lastBattle: { opponent, result: victory ? "victoria" : "derrota", reward }, creature: { ...current.creature, mood: victory ? "Alegre" : "Cansado", energy: Math.max(0, current.creature.energy - 15) }, dialogue: victory ? "¡Mi música me dio el impulso final!" : "Necesito descansar y volver a entrenar.", notifications: pushNotification(current.notifications, result.message) }; }); return result; }, []);
   const customize = useCallback((kind: "ball" | "skin", value: string) => setState((current) => ({ ...current, customization: { ...current.customization, [kind]: value }, notifications: pushNotification(current.notifications, `${kind === "ball" ? "Poké Ball" : "Skin"} equipada: ${value}.`) })), []);
-  const value = useMemo(() => ({ state, isHydrated, tapCreature, feedCreature, trainStat, awardListeningMinutes, setSpotifySession, setSpotifyPlayback, claimMission, buyShinyCharm, playMinigame, startBreeding, advanceEgg, evolveCreature, runBattle, customize }), [state, isHydrated, tapCreature, feedCreature, trainStat, awardListeningMinutes, setSpotifySession, setSpotifyPlayback, claimMission, buyShinyCharm, playMinigame, startBreeding, advanceEgg, evolveCreature, runBattle, customize]);
+
+  const chooseStarter = useCallback((species: string): ActionResult => { let result: ActionResult = { ok: false, message: "Ya elegiste tu Pokémon inicial." }; setState((current) => { if (current.starterChosen) return current; const entry = getPokedexEntry(species); result = { ok: true, message: `¡${entry.name} será tu compañero inicial!` }; return { ...current, starterChosen: true, creature: { ...current.creature, species: entry.name, evolutionStage: entry.name, name: entry.name === "Pikachu" ? "Lumi" : entry.name }, collection: [entry.id], dialogue: `¡Vamos, ${entry.name}! Nuestra aventura comienza.`, notifications: pushNotification(current.notifications, result.message) }; }); return result; }, []);
+  const encounterRoute = useCallback((routeId: number): ActionResult => { const route = routeFor(routeId); const found = route.species[Math.floor(Math.random() * route.species.length)]; const level = route.minLevel + Math.floor(Math.random() * (route.maxLevel - route.minLevel + 1)); const result = { ok: true, message: `¡Apareció ${found.name} salvaje de nivel ${level} en ${route.name}!` }; setState((current) => ({ ...current, route: { current: route.id, encounter: { id: found.id, level } }, dialogue: result.message, notifications: pushNotification(current.notifications, result.message) })); return result; }, []);
+  const captureEncounter = useCallback((): ActionResult => { let result: ActionResult = { ok: false, message: "No hay ningún Pokémon salvaje delante." }; setState((current) => { const encounter = current.route.encounter; if (!encounter) return current; const ball = current.customization.ball || "Poké Ball"; const amount = current.inventory[ball] ?? 0; if (!amount) { result = { ok: false, message: `No tienes ${ball}. Equipa otra Ball o consigue más.` }; return current; } const baseChance = ball === "Ultra Ball" ? 0.78 : ball === "Super Ball" ? 0.58 : 0.38; const levelPenalty = Math.max(0, (encounter.level - current.creature.level) * 0.012); const success = Math.random() < Math.max(0.12, baseChance - levelPenalty); const nextInventory = { ...current.inventory, [ball]: amount - 1 }; if (!success) { result = { ok: false, message: `¡${ball} falló! El Pokémon escapó del intento.` }; return { ...current, inventory: nextInventory, dialogue: result.message, notifications: pushNotification(current.notifications, result.message) }; } const species = getPokedexEntry(encounter.id); result = { ok: true, message: `¡Capturaste a ${species.name} con ${ball}!` }; return { ...current, inventory: nextInventory, collection: current.collection.includes(encounter.id) ? current.collection : [...current.collection, encounter.id], route: { ...current.route, encounter: null }, wallet: { ...current.wallet, pkc: current.wallet.pkc + encounter.level * 4 }, dialogue: result.message, notifications: pushNotification(current.notifications, result.message) }; }); return result; }, []);
+  const resetGame = useCallback(() => { setState({ ...initialGameState, activeEvent: null, starterChosen: false, collection: [], route: { current: 1, encounter: null }, lastSavedAt: Date.now() }); }, []);
+
+  const value = useMemo(() => ({ state, isHydrated, tapCreature, feedCreature, trainStat, awardListeningMinutes, setSpotifySession, setSpotifyPlayback, claimMission, buyShinyCharm, playMinigame, startBreeding, advanceEgg, evolveCreature, runBattle, customize, chooseStarter, encounterRoute, captureEncounter, resetGame }), [state, isHydrated, tapCreature, feedCreature, trainStat, awardListeningMinutes, setSpotifySession, setSpotifyPlayback, claimMission, buyShinyCharm, playMinigame, startBreeding, advanceEgg, evolveCreature, runBattle, customize, chooseStarter, encounterRoute, captureEncounter, resetGame]);
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
 }
 

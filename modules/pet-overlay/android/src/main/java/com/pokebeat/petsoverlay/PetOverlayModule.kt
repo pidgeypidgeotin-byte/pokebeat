@@ -16,22 +16,25 @@ class PetOverlayModule : Module() {
     }
 
     Function("openOverlaySettings") {
-      val context = appContext.reactContext ?: return@Function
+      val context = appContext.reactContext ?: return@Function null
       val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}"))
       intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
       context.startActivity(intent)
+      null
     }
 
     Function("start") {
-      val context = appContext.reactContext ?: return@Function
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(context)) return@Function
+      val context = appContext.reactContext ?: return@Function null
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(context)) return@Function null
       val intent = Intent(context, PetOverlayService::class.java)
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) context.startForegroundService(intent) else context.startService(intent)
+      null
     }
 
     Function("stop") {
-      val context = appContext.reactContext ?: return@Function
+      val context = appContext.reactContext ?: return@Function null
       context.stopService(Intent(context, PetOverlayService::class.java))
+      null
     }
   }
 }

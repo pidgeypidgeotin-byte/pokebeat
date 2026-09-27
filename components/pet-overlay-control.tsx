@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Alert, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, AppState, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { getPetOverlay } from "pokebeat-pet-overlay";
 
@@ -14,6 +14,10 @@ export function PetOverlayControl() {
       const native = getPetOverlay();
       setAvailable(true);
       setHasPermission(native.canDrawOverlays());
+      const subscription = AppState.addEventListener("change", (nextState) => {
+        if (nextState === "active") setHasPermission(native.canDrawOverlays());
+      });
+      return () => subscription.remove();
     } catch {
       setAvailable(false);
     }
