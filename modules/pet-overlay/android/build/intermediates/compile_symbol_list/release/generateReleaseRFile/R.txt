@@ -1,0 +1,1 @@
+int drawable pikachu_overlay 0x0

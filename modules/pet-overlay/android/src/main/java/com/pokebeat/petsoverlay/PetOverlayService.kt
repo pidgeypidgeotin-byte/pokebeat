@@ -22,9 +22,7 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import kotlin.math.abs
-import kotlin.cos
-import kotlin.sin
-import kotlin.sqrt
+import kotlin.math.sin
 import kotlin.random.Random
 
 class PetOverlayService : Service() {

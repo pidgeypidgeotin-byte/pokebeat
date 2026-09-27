@@ -1,0 +1,2 @@
+com.pokebeat.petsoverlay
+drawable pikachu_overlay

@@ -1,0 +1,38 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.pokebeat.petsoverlay" >
+4
+5    <uses-sdk android:minSdkVersion="24" />
+6
+7    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+7-->/home/ubuntu/pokebeat/modules/pet-overlay/android/src/main/AndroidManifest.xml:2:3-75
+7-->/home/ubuntu/pokebeat/modules/pet-overlay/android/src/main/AndroidManifest.xml:2:20-72
+8    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+8-->/home/ubuntu/pokebeat/modules/pet-overlay/android/src/main/AndroidManifest.xml:3:3-87
+8-->/home/ubuntu/pokebeat/modules/pet-overlay/android/src/main/AndroidManifest.xml:3:20-84
+9    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+9-->/home/ubuntu/pokebeat/modules/pet-overlay/android/src/main/AndroidManifest.xml:4:3-76
+9-->/home/ubuntu/pokebeat/modules/pet-overlay/android/src/main/AndroidManifest.xml:4:20-73
+10
+11    <application>
+11-->/home/ubuntu/pokebeat/modules/pet-overlay/android/src/main/AndroidManifest.xml:5:3-9:17
+12        <service
+12-->/home/ubuntu/pokebeat/modules/pet-overlay/android/src/main/AndroidManifest.xml:6:5-8:15
+13            android:name="com.pokebeat.petsoverlay.PetOverlayService"
+13-->/home/ubuntu/pokebeat/modules/pet-overlay/android/src/main/AndroidManifest.xml:6:14-47
+14            android:exported="false"
+14-->/home/ubuntu/pokebeat/modules/pet-overlay/android/src/main/AndroidManifest.xml:6:48-72
+15            android:foregroundServiceType="specialUse"
+15-->/home/ubuntu/pokebeat/modules/pet-overlay/android/src/main/AndroidManifest.xml:6:102-144
+16            android:stopWithTask="false" >
+16-->/home/ubuntu/pokebeat/modules/pet-overlay/android/src/main/AndroidManifest.xml:6:73-101
+17            <property
+17-->/home/ubuntu/pokebeat/modules/pet-overlay/android/src/main/AndroidManifest.xml:7:7-126
+18                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+18-->/home/ubuntu/pokebeat/modules/pet-overlay/android/src/main/AndroidManifest.xml:7:17-76
+19                android:value="persistent virtual pet overlay" />
+19-->/home/ubuntu/pokebeat/modules/pet-overlay/android/src/main/AndroidManifest.xml:7:77-123
+20        </service>
+21    </application>
+22
+23</manifest>
