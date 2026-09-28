@@ -3,7 +3,7 @@ import { requireNativeModule } from "expo-modules-core";
 export type PetOverlayNative = {
   canDrawOverlays(): boolean;
   openOverlaySettings(): void;
-  start(): void;
+  start(speciesId?: number): void;
   stop(): void;
 };
 

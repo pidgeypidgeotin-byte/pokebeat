@@ -1,5 +1,5 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { formatNumber, GAME_CONFIG } from "@/lib/game-config";
@@ -7,12 +7,10 @@ import { useGame } from "@/lib/game-store";
 import { disconnectSpotify, fetchCurrentPlayback, fetchSpotifyProfile, getSpotifyRedirectUri, isSpotifyConfigured, startSpotifyOAuth, type SpotifyPlayback } from "@/lib/spotify";
 
 export default function MusicScreen() {
-  const { state, awardListeningMinutes, setSpotifySession, setSpotifyPlayback } = useGame();
+  const { state, setSpotifySession, setSpotifyPlayback } = useGame();
   const [busy, setBusy] = useState(false);
   const [playback, setPlayback] = useState<SpotifyPlayback | null>(null);
   const [lastSync, setLastSync] = useState<number | null>(null);
-  const previousPlayback = useRef<SpotifyPlayback | null>(null);
-  const pendingListenedMs = useRef(0);
   const favorite = (playback?.artist ?? state.music.currentArtist).toLowerCase() === state.creature.favoriteArtist.toLowerCase();
 
   const syncPlayback = useCallback(async () => {
@@ -20,23 +18,13 @@ export default function MusicScreen() {
       const current = await fetchCurrentPlayback();
       setPlayback(current);
       if (current) {
-        const previous = previousPlayback.current;
-        if (previous && current.isPlaying && previous.trackId === current.trackId && current.progressMs > previous.progressMs) {
-          pendingListenedMs.current += current.progressMs - previous.progressMs;
-          const earnedMinutes = Math.min(2, Math.floor(pendingListenedMs.current / 60_000));
-          pendingListenedMs.current %= 60_000;
-          if (earnedMinutes > 0) awardListeningMinutes(earnedMinutes);
-        } else if (!previous || previous.trackId !== current.trackId) {
-          pendingListenedMs.current = 0;
-        }
-        previousPlayback.current = current;
         setSpotifyPlayback(current);
         setLastSync(Date.now());
       }
     } catch (error) {
       Alert.alert("Spotify", `No se pudo leer la reproducción actual: ${String(error)}`);
     }
-  }, [awardListeningMinutes, setSpotifyPlayback]);
+  }, [setSpotifyPlayback]);
 
   useEffect(() => {
     if (!state.music.connected) return;

@@ -23,10 +23,10 @@ class PetOverlayModule : Module() {
       null
     }
 
-    Function("start") {
+    Function("start") { speciesId: Int? ->
       val context = appContext.reactContext ?: return@Function null
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(context)) return@Function null
-      val intent = Intent(context, PetOverlayService::class.java)
+      val intent = Intent(context, PetOverlayService::class.java).apply { putExtra(PetOverlayService.EXTRA_SPECIES_ID, speciesId ?: 25) }
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) context.startForegroundService(intent) else context.startService(intent)
       null
     }

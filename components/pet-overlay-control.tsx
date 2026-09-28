@@ -3,6 +3,7 @@ import { Alert, AppState, Platform, Pressable, StyleSheet, Text, View } from "re
 
 import { getPetOverlay } from "pokebeat-pet-overlay";
 import { useGame } from "@/lib/game-store";
+import { getPokedexEntry } from "@/lib/pokedex";
 
 export function PetOverlayControl() {
   const { state } = useGame();
@@ -25,6 +26,11 @@ export function PetOverlayControl() {
     }
   }, []);
 
+  useEffect(() => {
+    if (!enabled || Platform.OS !== "android") return;
+    try { getPetOverlay().start(getPokedexEntry(state.creature.species).id); } catch { /* runtime native module unavailable */ }
+  }, [enabled, state.creature.species]);
+
   if (Platform.OS !== "android") return null;
   if (!available) return <View style={styles.card}><Text style={styles.title}>Mascota persistente</Text><Text style={styles.body}>Disponible en la compilación Android nativa.</Text></View>;
 
@@ -35,7 +41,7 @@ export function PetOverlayControl() {
       Alert.alert("Permiso requerido", "Activa “Mostrar sobre otras aplicaciones” para que tu Pokémon pueda acompañarte fuera de PokéBeat. Después vuelve aquí y pulsa de nuevo.");
       return;
     }
-    if (enabled) { native.stop(); setEnabled(false); } else { native.start(); setEnabled(true); }
+    if (enabled) { native.stop(); setEnabled(false); } else { native.start(getPokedexEntry(state.creature.species).id); setEnabled(true); }
   };
 
   return <View style={styles.card}><View style={styles.row}><View style={{ flex: 1 }}><Text style={styles.title}>Mascota persistente</Text><Text style={styles.body}>{enabled ? `${state.creature.species} está visible sobre otras apps.` : hasPermission ? "Permiso listo: puedes activar el overlay." : "Activa el permiso de overlay para usarlo."}</Text></View><Text style={styles.icon}>◉</Text></View><Pressable onPress={toggle} style={({ pressed }) => [styles.button, enabled && styles.stopButton, pressed && styles.pressed]}><Text style={[styles.buttonText, enabled && styles.stopText]}>{enabled ? "Ocultar mascota" : hasPermission ? "Mostrar fuera de la app" : "Conceder permiso"}</Text></Pressable><Text style={styles.note}>Android mantiene una notificación foreground mientras está activo; puedes detenerlo desde aquí o desde el sistema.</Text></View>;

@@ -21,4 +21,4 @@ export const KANTO_GYMS: Gym[] = [
 ];
 
 export function unlockedRouteCount(badgeCount: number) { return Math.min(24, 3 + badgeCount * 3); }
-export function nextGym(badges: string[]) { return KANTO_GYMS[badges.length] ?? null; }
+export function nextGym(badges: string[]) { return KANTO_GYMS.find((gym) => !badges.includes(gym.id)) ?? null; }
