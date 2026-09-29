@@ -23,10 +23,10 @@ class PetOverlayModule : Module() {
       null
     }
 
-    Function("start") { speciesId: Int? ->
+    Function("start") { speciesId: Int?, accessToken: String? ->
       val context = appContext.reactContext ?: return@Function null
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(context)) return@Function null
-      val intent = Intent(context, PetOverlayService::class.java).apply { putExtra(PetOverlayService.EXTRA_SPECIES_ID, speciesId ?: 25) }
+      val intent = Intent(context, PetOverlayService::class.java).apply { putExtra(PetOverlayService.EXTRA_SPECIES_ID, speciesId ?: 25); putExtra(PetOverlayService.EXTRA_SPOTIFY_TOKEN, accessToken ?: "") }
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) context.startForegroundService(intent) else context.startService(intent)
       null
     }
@@ -35,6 +35,14 @@ class PetOverlayModule : Module() {
       val context = appContext.reactContext ?: return@Function null
       context.stopService(Intent(context, PetOverlayService::class.java))
       null
+    }
+
+    Function("consumePendingPlaybackMs") {
+      val context = appContext.reactContext ?: return@Function 0.0
+      val preferences = context.getSharedPreferences(PetOverlayService.PREFERENCES_NAME, 0)
+      val pending = preferences.getLong(PetOverlayService.PENDING_PLAYBACK_MS, 0L)
+      preferences.edit().putLong(PetOverlayService.PENDING_PLAYBACK_MS, 0L).apply()
+      pending.toDouble()
     }
   }
 }

@@ -22,12 +22,20 @@ import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
+import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
 import kotlin.math.abs
 import kotlin.math.sin
 import kotlin.random.Random
 
 class PetOverlayService : Service() {
-  companion object { const val EXTRA_SPECIES_ID = "pokebeat_species_id" }
+  companion object {
+    const val EXTRA_SPECIES_ID = "pokebeat_species_id"
+    const val EXTRA_SPOTIFY_TOKEN = "pokebeat_spotify_token"
+    const val PREFERENCES_NAME = "pokebeat_overlay_sync"
+    const val PENDING_PLAYBACK_MS = "pending_playback_ms"
+  }
 
   private var windowManager: WindowManager? = null
   private var petView: ImageView? = null
@@ -48,6 +56,17 @@ class PetOverlayService : Service() {
   private var frameWidth = 0
   private var frameHeight = 0
   private var frameRows = 1
+  private var spotifyToken = ""
+  private var lastTrackId: String? = null
+  private var lastProgressMs = 0L
+  private var lastIsPlaying = false
+
+  private val spotifyPoll = object : Runnable {
+    override fun run() {
+      if (spotifyToken.isNotBlank()) pollSpotifyPlayback()
+      handler.postDelayed(this, 20_000L)
+    }
+  }
 
   private val motion = object : Runnable {
     override fun run() {
@@ -105,8 +124,40 @@ class PetOverlayService : Service() {
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
     speciesId = intent?.getIntExtra(EXTRA_SPECIES_ID, speciesId) ?: speciesId
+    spotifyToken = intent?.getStringExtra(EXTRA_SPOTIFY_TOKEN).orEmpty()
     if (petView != null) loadSpeciesSprite()
+    handler.removeCallbacks(spotifyPoll)
+    handler.post(spotifyPoll)
     return START_STICKY
+  }
+
+  private fun pollSpotifyPlayback() {
+    Thread {
+      try {
+        val connection = (URL("https://api.spotify.com/v1/me/player/currently-playing?market=ES&additional_types=track,episode").openConnection() as HttpURLConnection).apply {
+          requestMethod = "GET"
+          connectTimeout = 8_000
+          readTimeout = 8_000
+          setRequestProperty("Authorization", "Bearer $spotifyToken")
+        }
+        if (connection.responseCode == 200) {
+          val payload = JSONObject(connection.inputStream.bufferedReader().use { it.readText() })
+          val item = payload.optJSONObject("item")
+          val trackId = item?.optString("id")?.takeIf { it.isNotBlank() }
+          val progress = payload.optLong("progress_ms", 0L)
+          val isPlaying = payload.optBoolean("is_playing", false)
+          if (trackId != null && trackId == lastTrackId && lastIsPlaying && isPlaying && progress > lastProgressMs) {
+            val delta = (progress - lastProgressMs).coerceAtMost(120_000L)
+            val prefs = getSharedPreferences(PREFERENCES_NAME, 0)
+            prefs.edit().putLong(PENDING_PLAYBACK_MS, prefs.getLong(PENDING_PLAYBACK_MS, 0L) + delta).apply()
+          }
+          lastTrackId = trackId
+          lastProgressMs = progress
+          lastIsPlaying = isPlaying
+        }
+        connection.disconnect()
+      } catch (_: Exception) { }
+    }.start()
   }
 
   private fun createNotificationChannel() {
